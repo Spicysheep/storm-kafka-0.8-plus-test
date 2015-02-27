@@ -15,8 +15,34 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
+
+import backtype.storm.task.ShellBolt;
+import backtype.storm.topology.IRichBolt;
+import java.util.HashMap;
+import java.util.Map;
+import backtype.storm.tuple.Fields;
+
+
 public class KafkaSpoutTestTopology {
     public static final Logger LOG = LoggerFactory.getLogger(KafkaSpoutTestTopology.class);
+
+
+    public static class SplitSentence extends ShellBolt implements IRichBolt {
+
+    	public SplitSentence() {
+      		super("python", "splitsentence.py");
+    	}
+
+    	@Override
+    	public void declareOutputFields(OutputFieldsDeclarer declarer) {
+      		declarer.declare(new Fields("word"));
+    	}
+
+    	@Override
+    	public Map<String, Object> getComponentConfiguration() {
+      		return null;
+    	}
+    }
 
     public static class PrinterBolt extends BaseBasicBolt {
         @Override
@@ -40,8 +66,9 @@ public class KafkaSpoutTestTopology {
         SpoutConfig kafkaConfig = new SpoutConfig(brokerHosts, "storm-sentence", "", "storm");
         kafkaConfig.scheme = new SchemeAsMultiScheme(new StringScheme());
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout("words", new KafkaSpout(kafkaConfig), 10);
-        builder.setBolt("print", new PrinterBolt()).shuffleGrouping("words");
+        builder.setSpout("spout", new KafkaSpout(kafkaConfig), 10);
+        builder.setBolt("split", new SplitSentence(), 8).shuffleGrouping("spout");
+        builder.setBolt("print", new PrinterBolt()).shuffleGrouping("split");
         return builder.createTopology();
     }
 
