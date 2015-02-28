@@ -42,7 +42,7 @@
     </dependencies>
     <build>
 
-<sourceDirectory>src/jvm</sourceDirectory>
+<sourceDirectory>src/main/java</sourceDirectory>
     <testSourceDirectory>src/main/java</testSourceDirectory>
     <resources>
       <resource>
